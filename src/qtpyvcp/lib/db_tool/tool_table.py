@@ -34,7 +34,7 @@ class Tool(Base):
     i_offset = Column(Float)
     j_offset = Column(Float)
     q_offset = Column(Float)
-    u_offset = Column(Float)
+    u_offset = Column(Integer)
     v_offset = Column(Float)
     w_offset = Column(Float)
     diameter = Column(Float)

@@ -63,7 +63,7 @@ DEFAULT_TOOL = {
     'P': 0,
     'Q': 1,
     'T': -1,
-    'U': 0.0,
+    'U': 0,
     'V': 0.0,
     'W': 0.0,
     'X': 0.0,
@@ -96,7 +96,7 @@ COLUMN_LABELS = {
     'Q': 'Orient',
     'R': 'Remark',
     'T': 'Tool',
-    'U': 'U Offset',
+    'U': 'Max RPM',
     'V': 'V Offset',
     'W': 'W Offset',
     'X': 'X Offset',
@@ -302,7 +302,7 @@ class ToolTable(DataPlugin):
                     descriptor = item[0]
                     if descriptor in 'TPXYZABCUVWDIJQR':
                         value = item[1:]
-                        if descriptor in ('T', 'P', 'Q'):
+                        if descriptor in ('T', 'P', 'Q', 'U',):
     
                             try:
                                 tool[descriptor] = int(value)
@@ -340,7 +340,7 @@ class ToolTable(DataPlugin):
                     newtool['A'] = float(tool.aoffset)
                     newtool['B'] = float(tool.boffset)
                     newtool['C'] = float(tool.coffset)
-                    newtool['U'] = float(tool.uoffset)
+                    newtool['U'] = int(tool.uoffset)
                     newtool['V'] = float(tool.voffset)
                     newtool['W'] = float(tool.woffset)
                     newtool['D'] = float(tool.diameter)
@@ -415,7 +415,7 @@ class ToolTable(DataPlugin):
         for col in columns:
             if col == 'R':
                 continue
-            w = (INT_COLUMN_WIDTH if col in 'TPQ' else FLOAT_COLUMN_WIDTH) - \
+            w = (INT_COLUMN_WIDTH if col in 'TPQU' else FLOAT_COLUMN_WIDTH) - \
                 (1 if col == self.columns[0] else 0)
             items.append('{:<{w}}'.format(COLUMN_LABELS[col], w=w))
 
@@ -429,7 +429,7 @@ class ToolTable(DataPlugin):
             for col in columns:
                 if col == 'R':
                     continue
-                if col in 'TPQ':
+                if col in 'TPQU':
                     items.append('{col}{val:<{w}}'
                                  .format(col=col,
                                          val=tool_data[col],
