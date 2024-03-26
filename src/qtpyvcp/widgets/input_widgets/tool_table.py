@@ -45,17 +45,19 @@ class ItemDelegate(QStyledItemDelegate):
             editor.setTextMargins(margins)
             return editor
 
-        elif col in 'TPQ':
+        elif col in 'TPQU':
             editor = QSpinBox(parent)
             editor.setFrame(False)
             editor.setAlignment(Qt.AlignCenter)
             if col == 'Q':
                 editor.setMaximum(9)
+            elif col == 'U':
+                editor.setRange(-1, 24000)
             else:
                 editor.setMaximum(99999)
             return editor
 
-        elif col in 'XYZABCUVWD':
+        elif col in 'XYZABCVWD':
             editor = QDoubleSpinBox(parent)
             editor.setFrame(False)
             editor.setAlignment(Qt.AlignCenter)
@@ -149,7 +151,7 @@ class ToolModel(QStandardItemModel):
             col = self._columns[index.column()]
             if col == 'R':      # Remark
                 return Qt.AlignVCenter | Qt.AlignLeft
-            elif col in 'TPQ':  # Integers (Tool, Pocket, Orient)
+            elif col in 'TPQU':  # Integers (Tool, Pocket, Orient)
                 return Qt.AlignVCenter | Qt.AlignCenter
             else:               # All the other floats
                 return Qt.AlignVCenter | Qt.AlignRight
