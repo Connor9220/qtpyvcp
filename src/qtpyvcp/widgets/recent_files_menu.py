@@ -44,14 +44,14 @@ class RecentFilesMenu(QMenu):
             self._actions.append(action)
             self.addAction(action)
 
-        self.addSeparator()
+        #self.addSeparator()
 
-        action = QAction(parent=self,
-                         text='Browse for files ...',
-                         triggered=lambda: showDialog('open_file'),
-                         )
+        #action = QAction(parent=self,
+        #                 text='Browse for files ...',
+        #                 triggered=lambda: showDialog('open_file'),
+        #                 )
 
-        self.addAction(action)
+        #self.addAction(action)
 
         self.update(files or self.status.recent_files())
         self.status.recent_files.notify(self.update)
