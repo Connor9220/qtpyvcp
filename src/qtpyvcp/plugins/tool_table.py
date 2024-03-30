@@ -151,6 +151,7 @@ class ToolTable(DataPlugin):
         STATUS.tool_in_spindle.notify(self.setCurrentToolNumber)
         STATUS.tool_table.notify(lambda *args: self.loadToolTable())
 
+        STATUS.all_axes_homed.notify(self.reload_atc)
         STATUS.all_axes_homed.notify(self.reload_tool)
 
     def reload_tool(self):
@@ -162,6 +163,12 @@ class ToolTable(DataPlugin):
                 cmd = "M61 Q{0} G43".format(tnum)
                 # give LinuxCNC time to switch modes
                 QTimer.singleShot(200, lambda: issue_mdi(cmd))
+
+    def reload_atc(self):
+        if STATUS.all_axes_homed.value and STATUS.enabled.value:
+            cmd = "M13"
+            # give LinuxCNC time to switch modes
+            QTimer.singleShot(200, lambda: issue_mdi(cmd))
 
     @DataChannel
     def current_tool(self, chan, item=None):
