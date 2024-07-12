@@ -2,6 +2,7 @@
 /build
 /dist
 /venv
+/debian
 *.egg-info
 *.pyc
 *.qmlc
@@ -51,4 +52,4 @@ docs/source/_build/
 .debian/changelog
 DEBIAN/
 tmp/
-
+build.sh
