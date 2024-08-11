@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>421</width>
-    <height>128</height>
+    <height>284</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -73,7 +73,50 @@
       <property name="spacing">
        <number>12</number>
       </property>
-      <item row="0" column="0" colspan="2">
+      <item row="3" column="0" colspan="3">
+       <widget class="QLabel" name="lblToolRemark">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>60</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel {
+    border-style: transparent;
+    border-color: rgb(235, 235, 235);
+    border-width: 1px;
+    border-radius: 5px;
+    color: black;
+    background: rgb(235, 235, 235);
+	font: 75 16pt &quot;Bebas Kai&quot;;
+}</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="text">
+         <string>The current tool's diameter necessitates proper
+alignment. Please rotate the tool to position one
+of its teeth over the tool setter. Once aligned,
+click the button below to continue the touch
+off operation.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="3">
        <widget class="QLabel" name="label_1">
         <property name="font">
          <font>
@@ -82,78 +125,43 @@
          </font>
         </property>
         <property name="text">
-         <string>Program Paused</string>
+         <string>Tool Alignment Needed</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="ActionButton" name="actionbutton_2">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>130</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>55</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">font: 75 17pt &quot;Bebas Kai&quot;;</string>
-          </property>
-          <property name="text">
-           <string>CANCEL</string>
-          </property>
-          <property name="actionName" stdset="0">
-           <string>program.abort</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="ActionButton" name="actionbutton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>130</width>
-            <height>40</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>55</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">font: 75 17pt &quot;Bebas Kai&quot;;</string>
-          </property>
-          <property name="text">
-           <string>RESUME FEED</string>
-          </property>
-          <property name="actionName" stdset="0">
-           <string>program.run</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="4" column="0" colspan="3">
+       <widget class="ActionButton" name="actionbutton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>55</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>55</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">font: 75 17pt &quot;Bebas Kai&quot;;</string>
+        </property>
+        <property name="text">
+         <string>ONCE TOOL IS ALIGNED - PRESS TO RESUME</string>
+        </property>
+        <property name="actionName" stdset="0">
+         <string>program.run</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -182,22 +190,6 @@
     <hint type="destinationlabel">
      <x>31</x>
      <y>332</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionbutton_2</sender>
-   <signal>clicked()</signal>
-   <receiver>Dialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>107</x>
-     <y>83</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>210</x>
-     <y>63</y>
     </hint>
    </hints>
   </connection>
