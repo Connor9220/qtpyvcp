@@ -24,9 +24,9 @@ from qtpyvcp import actions
 from qtpyvcp.widgets.dialogs.base_dialog import BaseDialog
 from qtpyvcp.plugins import getPlugin
 
-class ResumeDialog(BaseDialog):
+class AlignToolDialog(BaseDialog):
     def __init__(self, *args, **kwargs):
-        super(ResumeDialog, self).__init__(title=None,stay_on_top=True,frameless=True)
+        super(AlignToolDialog, self).__init__(title=None,stay_on_top=True,frameless=True)
 
         default_ui = os.path.join(os.path.dirname(__file__), 'align_tool_dialog.ui')
 
