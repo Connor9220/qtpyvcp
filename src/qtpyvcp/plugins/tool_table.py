@@ -312,7 +312,7 @@ class ToolTable(DataPlugin):
                         if descriptor in ('T', 'P', 'Q', 'U',):
     
                             try:
-                                tool[descriptor] = int(value)
+                                tool[descriptor] = int(float(value))
                             except:
                                 LOG.error('Error converting value to int: {}'.format(value))
                                 break
