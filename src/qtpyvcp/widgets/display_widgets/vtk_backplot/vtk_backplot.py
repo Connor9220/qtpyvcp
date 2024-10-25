@@ -46,6 +46,7 @@ vtk.qt.QVTKRWIBase = "QGLWidget"
 # Fix end
 
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtkmodules.vtkInteractionWidgets import vtkCameraOrientationWidget
 
 from qtpyvcp import actions
 from qtpyvcp.widgets import VCPWidget
@@ -75,6 +76,8 @@ NUMBER_OF_WCS = 9
 from qtpy.QtOpenGL import QGLFormat
 f = QGLFormat()
 f.setSampleBuffers(True)
+f.setSamples(8)  # Request 8x antialiasing (adjustable)
+
 QGLFormat.setDefaultFormat(f)
 
 
@@ -100,26 +103,55 @@ def vtk_version_ok(major, minor):
     else:
         return False
 
-
 class InteractorEventFilter(QObject):
+    def __init__(self, parent=None, jog_safety_off=True):
+        super(InteractorEventFilter, self).__init__(parent)
+        self._keyboard_jog_ctrl_off = jog_safety_off
+        self.slow_jog = False
+        self.rapid_jog = True
+        
     def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress:
             if event.isAutoRepeat():
                 return super().eventFilter(obj, event)
 
-            speed = actions.machine.MAX_JOG_SPEED / 60.0 if event.modifiers() & Qt.ShiftModifier else None
+            if event.modifiers() & Qt.ControlModifier:
+                jog_active = 1
+                LOG.debug("VTK - Key event modifier Ctrl is active")
+            elif self._keyboard_jog_ctrl_off:
+                jog_active = 1
+            else:
+                jog_active = 0
+
+    
+            #speed = actions.machine.MAX_JOG_SPEED / 60.0 if event.modifiers() & Qt.ShiftModifier else None
+            if self.rapid_jog:
+                speed = actions.machine.MAX_JOG_SPEED / 60
+            elif self.slow_jog:
+                speed = actions.machine.jog_linear_speed() / 60 / 10.0
+            else:
+                speed = None
+
+            LOG.debug("VTK - Key event processing")
+
             if event.key() == Qt.Key_Up:
-                actions.machine.jog.axis('Y', 1, speed=speed)
+                actions.machine.jog.axis('Y', 1*jog_active, speed=speed)
             elif event.key() == Qt.Key_Down:
-                actions.machine.jog.axis('Y', -1, speed=speed)
+                actions.machine.jog.axis('Y', -1*jog_active, speed=speed)
             elif event.key() == Qt.Key_Left:
-                actions.machine.jog.axis('X', -1, speed=speed)
+                actions.machine.jog.axis('X', -1*jog_active, speed=speed)
             elif event.key() == Qt.Key_Right:
-                actions.machine.jog.axis('X', 1, speed=speed)
+                actions.machine.jog.axis('X', 1*jog_active, speed=speed)
             elif event.key() == Qt.Key_PageUp:
-                actions.machine.jog.axis('Z', 1, speed=speed)
+                actions.machine.jog.axis('Z', 1*jog_active, speed=speed)
             elif event.key() == Qt.Key_PageDown:
-                actions.machine.jog.axis('Z', -1, speed=speed)
+                actions.machine.jog.axis('Z', -1*jog_active, speed=speed)
+            elif event.key() == Qt.Key_Minus:
+                self.slow_jog = True
+                self.rapid_jog = False
+            elif event.key() in [Qt.Key_Plus, Qt.Key_Equal]:
+                self.rapid_jog = True
+                self.slow_jog = False
             #else:
                 #print('Unhandled key press event')
         elif event.type() == QEvent.KeyRelease:
@@ -138,8 +170,12 @@ class InteractorEventFilter(QObject):
                 actions.machine.jog.axis('Z', 0)
             elif event.key() == Qt.Key_PageDown:
                 actions.machine.jog.axis('Z', 0)
+            elif event.key() == Qt.Key_Minus:
+                self.slow_jog = False
+            elif event.key() in [Qt.Key_Plus, Qt.Key_Equal]:
+                self.rapid_jog = False
             #else:
-            #print('Unhandled key release event')
+                #print('Unhandled key release event')
 
         return super().eventFilter(obj, event)
 
@@ -151,13 +187,13 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
 
         self._datasource = LinuxCncDataSource()
         
-        if self._datasource.getKeyboardJog():
-            LOG.info("keyboard JOG enabled")
-        else:
-            LOG.info("keyboard JOG disabled")
         
+        # Keyboard jogging is handled at the global level.
         if self._datasource.getKeyboardJog().lower() in ['true', '1', 't', 'y', 'yes']:
-            event_filter = InteractorEventFilter(self)
+            if self._datasource.getKeyboardJogLock().lower() in ['true', '1', 't', 'y', 'yes']:
+                event_filter = InteractorEventFilter(self, True)
+            else:
+                event_filter = InteractorEventFilter(self)
             self.installEventFilter(event_filter)
 
         self.current_time = round(time.time() * 1000)
@@ -167,6 +203,8 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
         self.parent = parent
         self.ploter_enabled = True
         self.touch_enabled = False
+        # provide a control to UI builders to suppress when line "breadcrumbs" are plotted
+        self.breadcrumbs_plotted = True
         
         view_default_setting = getSetting("backplot.view").value
         view_options_setting = getSetting("backplot.view").enum_options
@@ -270,6 +308,11 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
             self.clipping_range_far = 1000.0 #TODO: check this value
 
         self.camera.SetClippingRange(self.clipping_range_near, self.clipping_range_far)
+        
+        if self._datasource.getAntialias():
+            #self.camera.SetUseAntialiasing(True)  # VTK 9.x+
+            pass
+        
         self.renderer = vtk.vtkRenderer()
 
         self.renderer.SetActiveCamera(self.camera)
@@ -282,8 +325,20 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
 
         self.interactor = self.renderer_window.GetInteractor()
         self.interactor.SetInteractorStyle(self.nav_style)
-        self.interactor.SetRenderWindow(self.renderer_window)
+        ###self.interactor.SetRenderWindow(self.renderer_window)
         
+        self.interactor.render_window = self.renderer_window
+        # self.interactor.SetRenderWindow(self.renderer_window)
+        
+        if self._datasource.getAntialias() in ["true", "True", "TRUE", 1, "1"]:
+            self.renderer_window.SetMultiSamples(8)  # Enable 8x multisampling for antialiasing
+
+            
+        if self._datasource.getNavHelper() in ["true", "True", "TRUE", 1, "1"]:
+            print("NAV")
+            self.cam_orient_manipulator = vtkCameraOrientationWidget()
+            self.cam_orient_manipulator.SetParentRenderer(self.renderer)
+            
         if not IN_DESIGNER:
             
             print(self._datasource.getNavHelper())
@@ -384,6 +439,8 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
             self.interactor.AddObserver("MouseWheelForwardEvent", self.mouse_scroll_forward)
             self.interactor.AddObserver("MouseWheelBackwardEvent", self.mouse_scroll_backward)
 
+
+            
             self.interactor.Initialize()
             self.renderer_window.Render()
             self.interactor.Start()
@@ -466,7 +523,10 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
 
             # self.setViewP()
             # self.renderer.ResetCamera()
-
+            if self._datasource.getNavHelper() in ["true", "True", "TRUE", 1, "1"]:
+                print("NAV 2")
+                # Enable the widget.
+                self.cam_orient_manipulator.On()
 
     # Handle the mouse button events.
     def button_event(self, obj, event):
@@ -533,6 +593,7 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
 
     def keypress(self, obj, event):
         key = obj.GetKeySym()
+        LOG.debug("VTK - keypress for w or s")
         if key == 'w' or key == 's':
             self._setRepresentation(key)
 
@@ -1005,7 +1066,8 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
         # self.tool_actor.SetPosition(self.spindle_position)
 
         #print(f"Update tool tip position {time.time()}")
-        self.path_cache_actor.add_line_point(self.tooltip_position)
+        if self.breadcrumbs_plotted:
+            self.path_cache_actor.add_line_point(self.tooltip_position)
         self.renderer_window.Render()
         
     def move_part(self, part):
@@ -1881,6 +1943,10 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
         self.path_cache_actor = PathCacheActor(self.tooltip_position)
         self.renderer.AddActor(self.path_cache_actor)
         self.renderer_window.Render()
+
+    @Slot(bool)
+    def enableBreadcrumbs(self, enable):
+        self.breadcrumbs_plotted = enable
 
     @Slot(bool)
     def enable_panning(self, enabled):

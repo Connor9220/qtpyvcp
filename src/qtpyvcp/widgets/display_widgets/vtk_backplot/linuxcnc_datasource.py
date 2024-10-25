@@ -39,11 +39,13 @@ class LinuxCncDataSource(QObject):
         self._offsettable = getPlugin('offsettable')
         self._inifile = linuxcnc.ini(os.getenv("INI_FILE_NAME"))
         self._keyboard_jog = self._inifile.find("DISPLAY", "KEYBOARD_JOG") or "false"
+        self._keyboard_jog_ctrl_off = self._inifile.find("DISPLAY", "KEYBOARD_JOG_SAFETY_OFF ") or "false"
         self._is_lathe = bool(self._inifile.find("DISPLAY", "LATHE"))
         self._is_foam = bool(self._inifile.find("DISPLAY", "FOAM"))
         self._is_jet = bool(self._inifile.find("DISPLAY", "JET"))
         self._machine_bounds = str(self._inifile.find("DISPLAY", "BOUNDARIES"))
         self._nav_helper = bool(self._inifile.find("DISPLAY", "NAV")) or False
+        self._antialias = bool(self._inifile.find("DISPLAY", "ANTIALIAS")) or False
 
         self._status.file.notify(self.__handleProgramLoaded)
         self._status.position.notify(self.__handlePositionChanged)
@@ -164,11 +166,17 @@ class LinuxCncDataSource(QObject):
     def getKeyboardJog(self):
         return self._keyboard_jog
     
+    def getKeyboardJogLock(self):
+        return self._keyboard_jog_ctrl_off
+
     def getMachineBounds(self):
         return self._machine_bounds
     
     def getNavHelper(self):
         return self._nav_helper
+    
+    def getAntialias(self):
+        return self._antialias
 
     def getActiveWcsIndex(self):
         # in the stat, the first one the list is G53 (Machine Coordinates)
