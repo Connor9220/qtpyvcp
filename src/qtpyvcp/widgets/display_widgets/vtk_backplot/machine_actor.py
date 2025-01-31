@@ -351,10 +351,14 @@ class MachinePartsASM(vtk.vtkAssembly):
         
         transform.Translate(self.part_position[0], self.part_position[1], self.part_position[2])
         
-        transform.RotateX(self.part_position[3])
-        transform.RotateY(self.part_position[4])
-        transform.RotateZ(self.part_position[5])
-        
+        if len(self.part_position)==4:
+            transform.RotateX(self.part_position[3])
+
+        if len(self.part_position)==5:
+            transform.RotateY(self.part_position[4])
+
+        if len(self.part_position)==6:
+            transform.RotateZ(self.part_position[5])
         part_actor.SetUserTransform(transform)
         
         tmp_assembly = MachinePart()
