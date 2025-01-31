@@ -1,9 +1,12 @@
 import os
 import re
-from qtpy.QtWidgets import qApp
+
+from qtpy.QtWidgets import qApp, QApplication
 from qtpy.QtCore import Property
 
 from qtpyvcp.utilities.info import Info
+from qtpyvcp.widgets.input_widgets.line_edit import VCPLineEdit
+
 INFO = Info()
 
 from qtpyvcp.widgets import VCPButton
@@ -82,13 +85,12 @@ class SubCallButton(VCPButton):
             if int(pnumber) > 30:
                 # only #1-#30 are passed to the sub
                 continue
-
-            try:
-                # get the value from the GUI input widget
-                val = getattr(window, pname).text() or default_val
-            except:
-                val = default_val
-                LOG.warning('No input for red<{}> parameter, using default value blue<{}>'.format(pname, val))
+            
+            val = default_val
+            
+            for widget in QApplication.allWidgets():
+                if widget.objectName() == pname:
+                    val = str(widget.text())
 
             if val == '':
                 LOG.error('No value given for parameter red<{}>, and no default specified'.format(pname))
@@ -98,8 +100,9 @@ class SubCallButton(VCPButton):
                 val = float(val)
             except ValueError:
                 LOG.error('Input value "{}" given for parameter "{}" is not a valid number'.format(val, pname))
-                return False
-
+                return
+            
+          
             index = int(pnumber) - 1
             while len(args) <= index:
                 args.append("[0.0000]")

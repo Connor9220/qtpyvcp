@@ -46,7 +46,11 @@ class LinuxCncDataSource(QObject):
         self._machine_bounds = str(self._inifile.find("DISPLAY", "BOUNDARIES"))
         self._nav_helper = bool(self._inifile.find("DISPLAY", "NAV")) or False
         self._antialias = bool(self._inifile.find("DISPLAY", "ANTIALIAS")) or False
-
+        self._fps = int(self._inifile.find("DISPLAY", "FPS") or 0)
+        if self._fps == 0:
+            self._fps = int(self._inifile.find("VTK", "FPS") or 30)
+        LOG.debug(f'FPS = {self._fps}')
+        
         self._status.file.notify(self.__handleProgramLoaded)
         self._status.position.notify(self.__handlePositionChanged)
         self._status.motion_type.notify(self.__handleMotionTypeChanged)
@@ -76,17 +80,19 @@ class LinuxCncDataSource(QObject):
 
     def __handleG5xOffsetChange(self, offset):
         # the received parameter, its missing the rotation of the current wcs
-        # emitted_offset = list(offset)
-        # active_wcs = self.getWcsOffsets()[self.getActiveWcsIndex()]
+        LOG.debug("__handleG5xOffsetChange --- Start")
+        emitted_offset = list(offset)
+        active_wcs = self.getWcsOffsets()[self.getActiveWcsIndex()]
         #
-        # LOG.debug("--------initial offset emitted: {} {}".format(type(offset),offset))
-        # LOG.debug("--------active wcs: {} {}".format(type(active_wcs), active_wcs))
+        LOG.debug("--------initial offset emitted: {} {}".format(type(offset),offset))
+        LOG.debug("--------active wcs: {} {}".format(type(active_wcs), active_wcs))
         #
         # # emitted_offset.append(self.__getRotationOfActiveWcs())
         # LOG.debug("--------correct_offset: {}".format(emitted_offset))
-        # result = tuple(emitted_offset)
-        # LOG.debug("--------result: {} {}".format(type(result), result))
+        result = tuple(emitted_offset)
+        LOG.debug("--------result: {} {}".format(type(result), result))
         self.g5xOffsetChanged.emit(offset)
+        LOG.debug("__handleG5xOffsetChange --- End")
 
     def __handleG92OffsetChange(self, offset):
         #LOG.debug("__handleG92OffsetChange: {}".format(type(offset)))
@@ -126,6 +132,9 @@ class LinuxCncDataSource(QObject):
     def __handleToolTableChanged(self, tool_table):
         #LOG.debug("__handleToolTableChanged: {}".format(type(tool_table)))
         self.toolTableChanged.emit(tool_table)
+
+    def getFPS(self):
+        return self._fps
 
     def getAxis(self):
         return self._status.stat.axis

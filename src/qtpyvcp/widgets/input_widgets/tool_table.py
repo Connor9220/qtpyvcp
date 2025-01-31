@@ -145,8 +145,22 @@ class ToolModel(QStandardItemModel):
     def rowCount(self, parent=None):
         return len(self._tool_table) - 1
 
+
     def flags(self, index):
+        
+        row = index.row()
+        col = index.column()
+            
+        header_text = self.headerData(col, Qt.Horizontal, Qt.DisplayRole)
+        
+        tnum = sorted(self._tool_table)[row + self.row_offset]
+        
+        # check tool in spindle and make Tool No. read-only
+        if tnum == self.stat.tool_in_spindle and header_text == "Tool":
+            return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+    
 
     def data(self, index, role=Qt.DisplayRole):
         
@@ -401,6 +415,13 @@ class ToolTable(QTableView):
     def currentToolBackground(self, color):
         self.tool_model.current_tool_bg = color
 
+    @Property(int)
+    def currentRow(self):
+        return self.selectedRow()
+
+    @currentRow.setter
+    def currentRow(self, row):
+        self.selectRow(row)
 
     def insertToolAbove(self):
         # it does not make sense to insert tools, since the numbering
